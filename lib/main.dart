@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -90,6 +91,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void _addChartData(List<IndexQuote> quotes) {
     setState(() {
       _quotes = quotes;
+    });
+
+    Timer(Duration(milliseconds: 1000), () => {
+      setState((){
+        _quotes = quotes;
+      })
     });
   }
 
