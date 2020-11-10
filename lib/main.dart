@@ -153,8 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           "rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm "
                           "and 5.56 receive double weight. The other calibers (.45, .40, .38 Special, .380, .308, .30-06, 7.62x39, "
                           "7.62x54R) receive no weighting.\n\n"
-                          "If any caliber is entirely out of stock, \$10.00 is used as its cost per round. This will also "
-                          "happen if Ammoseek changes the format of their results page.\n\n"
+                          "If any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker rule).\n\n"
                           "If data doesn't appear, try resizing the window a bit. Flutter on the web is still not entirely mature.")
                     )
                   ],

@@ -51123,7 +51123,7 @@ $S:0}
 F.a_1.prototype={
 $1:function(a){var s=null,r=this.a
 r.d=a
-r=T.adu(H.c([M.pt(s,E.aeo(r.e),s,s,s,400,s,s,1/0),M.pt(s,L.C8("The Rifle & Pistol 10 is an index of ammunition prices. It is a weighted sum of 10 common rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm and 5.56 receive double weight. The other calibers (.45, .40, .38 Special, .380, .308, .30-06, 7.62x39, 7.62x54R) receive no weighting.\n\nIf any caliber is entirely out of stock, $10.00 is used as its cost per round. This will also happen if Ammoseek changes the format of their results page.\n\nIf data doesn't appear, try resizing the window a bit. Flutter on the web is still not entirely mature.",s),s,s,s,s,s,s,600)],t.fQ),C.mE)
+r=T.adu(H.c([M.pt(s,E.aeo(r.e),s,s,s,400,s,s,1/0),M.pt(s,L.C8("The Rifle & Pistol 10 is an index of ammunition prices. It is a weighted sum of 10 common rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm and 5.56 receive double weight. The other calibers (.45, .40, .38 Special, .380, .308, .30-06, 7.62x39, 7.62x54R) receive no weighting.\n\nIf any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker rule).\n\nIf data doesn't appear, try resizing the window a bit. Flutter on the web is still not entirely mature.",s),s,s,s,s,s,s,600)],t.fQ),C.mE)
 return new T.eY(new V.b8(24,0,24,0),T.KJ(new E.BB(!0,r,s),s,s),s)},
 $S:337}
 E.yz.prototype={
