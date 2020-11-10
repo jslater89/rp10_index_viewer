@@ -51166,7 +51166,7 @@ a.SJ(0,P.eq(p-5,o-30,b.c+10,b.d+10,t.BY),C.oO)
 n=new A.lc()
 n.c=C.oP
 n.a=15
-a.SM(new Q.la("$"+H.b($.a2J.b)+"\n"+T.Lp("M/d/yy HH:mm").f5(s),null,n,C.aM),C.d.T(p+(-(r/(q-1)*110)+20)),C.d.T(o-40))}}
+a.SM(new Q.la("$"+J.aw($.a2J.b,3)+"\n"+T.Lp("M/d/yy HH:mm").f5(s),null,n,C.aM),C.d.T(p+(-(r/(q-1)*110)+20)),C.d.T(o-40))}}
 E.dn.prototype={}
 Y.Wh.prototype={
 gk:function(a){return this.c.length},

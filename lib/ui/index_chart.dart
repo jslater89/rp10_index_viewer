@@ -158,7 +158,7 @@ class CustomCircleSymbolRenderer extends CircleSymbolRenderer {
     textStyle.color = Color.black;
     textStyle.fontSize = 15;
     canvas.drawText(
-        text.TextElement("\$${value.price}\n${DateFormat('M/d/yy HH:mm').format(local)}", style: textStyle),
+        text.TextElement("\$${value.price.toStringAsFixed(3)}\n${DateFormat('M/d/yy HH:mm').format(local)}", style: textStyle),
         (bounds.left + leftOffset).round(),
         (bounds.top - 40).round()
     );
