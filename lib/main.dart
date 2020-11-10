@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
     try {
-      var urlRoot = kDebugMode ? "http://localhost:8000" : "http://manywords.press:8000";
+      var urlRoot = kDebugMode ? "http://localhost:8000" : "https://rp10.manywords.press";
       var response = await http.get("$urlRoot/quote?start=$start");
 
       if(response.statusCode == 200) {

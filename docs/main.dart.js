@@ -51081,7 +51081,7 @@ g=H.kS(H.cC(g),H.bY(f),H.eo(e),0,0,0,0,!1)
 if(!H.bC(g))H.k(H.b_(g))
 h=new P.aj(g,!1)
 q=3
-m="http://manywords.press:8000"
+m="https://rp10.manywords.press"
 s=6
 return P.aq(G.ajv(H.b(m)+"/quote?start="+H.b(h)),$async$nv)
 case 6:l=b
