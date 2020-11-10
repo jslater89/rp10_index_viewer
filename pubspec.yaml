@@ -21,9 +21,12 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  intl:
   charts_flutter:
+    path: ../charts/charts_flutter
   rp10_index_server:
     path: ../rp10_index_server
+  timezone:
 
   flutter:
     sdk: flutter

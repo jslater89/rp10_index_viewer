@@ -74,16 +74,16 @@ packages:
   charts_common:
     dependency: transitive
     description:
-      name: charts_common
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "../charts/charts_common"
+      relative: true
+    source: path
     version: "0.9.0"
   charts_flutter:
     dependency: "direct main"
     description:
-      name: charts_flutter
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "../charts/charts_flutter"
+      relative: true
+    source: path
     version: "0.9.0"
   checked_yaml:
     dependency: transitive
@@ -120,6 +120,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.1"
+  cron:
+    dependency: transitive
+    description:
+      name: cron
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.4"
   crypto:
     dependency: transitive
     description:
@@ -194,7 +201,7 @@ packages:
     source: hosted
     version: "0.9.8+3"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       url: "https://pub.dartlang.org"
@@ -416,7 +423,7 @@ packages:
     source: hosted
     version: "0.2.19-nullsafety.2"
   timezone:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: timezone
       url: "https://pub.dartlang.org"

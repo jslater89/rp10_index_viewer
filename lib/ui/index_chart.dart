@@ -10,6 +10,7 @@ import 'dart:math';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_flutter/flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:rp10_index_server/index_quote.dart';
 import 'package:charts_flutter/src/text_element.dart' as text;
 import 'package:charts_flutter/src/text_style.dart' as style;
@@ -17,46 +18,118 @@ import 'package:charts_flutter/src/text_style.dart' as style;
 class IndexChart extends StatelessWidget {
   final List<charts.Series<IndexQuotePriceData, DateTime>> _seriesList;
   final bool animate;
+  final DateTime first;
+  final DateTime last;
+  final double highPrice;
+  final double lowPrice;
 
-  IndexChart(List<IndexQuote> quotes, {this.animate = false}) : _seriesList = [
-    charts.Series<IndexQuotePriceData, DateTime>(
-      data: quotes.map((it) => IndexQuotePriceData(it.time, it.indexPrice)).toList(),
-      domainFn: (datum, _) => datum.time,
-      measureFn: (datum, _) => datum.price,
-      id: 'Index Quotes',
-    )
-  ];
+  factory IndexChart(List<IndexQuote> quotes) {
+    double highPrice = 0, lowPrice = 1000;
+    DateTime first = DateTime(3000), last = DateTime(0);
+
+    for(var quote in quotes) {
+      if(quote.indexPrice < lowPrice) lowPrice = quote.indexPrice;
+      if(quote.indexPrice > highPrice) highPrice = quote.indexPrice;
+      if(quote.time.isBefore(first)) first = quote.time;
+      if(quote.time.isAfter(last)) last = quote.time;
+    }
+
+    var seriesList = [
+      charts.Series<IndexQuotePriceData, DateTime>(
+        data: quotes.map((it) => IndexQuotePriceData(it.time, it.indexPrice)).toList(),
+        domainFn: (datum, _) => datum.time,
+        measureFn: (datum, _) => datum.price,
+        id: 'Index Quotes',
+        colorFn: (datum, _) => charts.Color.fromHex(code: "#455A64"),
+      )
+    ];
+    return IndexChart._internal(
+      seriesList,
+      animate: false,
+      first: first,
+      last: last,
+      highPrice: highPrice,
+      lowPrice: lowPrice,
+    );
+  }
+
+  IndexChart._internal(this._seriesList, {this.animate, this.first, this.last, this.highPrice, this.lowPrice});
+
+  List<charts.TickSpec<double>> _generatePriceTicks() {
+    final topTick = _roundDouble(highPrice * 1.1, 2);
+    var bottomTick = _roundDouble(lowPrice * 0.9, 2);
+    if(bottomTick / topTick > 0.4) {
+      bottomTick = 0.4 * topTick;
+    }
+    final difference = topTick - bottomTick;
+    final middleTicks = 3;
+    final tickInterval = difference / middleTicks.toDouble();
+
+    var ticks = <charts.TickSpec<double>>[];
+    ticks.add(charts.TickSpec(bottomTick, label: "\$${bottomTick.toStringAsFixed(2)}"));
+    for(int i = 1; i <= middleTicks; i++) {
+      final value = bottomTick + i*tickInterval;
+      ticks.add(charts.TickSpec(value, label: "\$${value.toStringAsFixed(2)}"));
+    }
+    ticks.add(charts.TickSpec(topTick, label: "\$${topTick.toStringAsFixed(2)}"));
+
+    return ticks;
+  }
+
+  DateTime _getExtentStart() {
+    var difference = first.difference(last);
+    var localFirst = first;
+    if(difference.inDays < 1) {
+      localFirst = last.subtract(Duration(days: 1));
+    }
+    else if(difference.inDays < 7) {
+      localFirst = last.subtract(Duration(days: 7));
+    }
+    else if(difference.inDays < 30) {
+      localFirst = last.subtract(Duration(days: 30));
+    }
+    return localFirst;
+  }
 
   @override
   Widget build(BuildContext context) {
     return charts.TimeSeriesChart(
       _seriesList,
       animate: animate,
-      defaultRenderer: new charts.LineRendererConfig(),
       primaryMeasureAxis: charts.AxisSpec(
         tickProviderSpec: charts.StaticNumericTickProviderSpec(
-          [
-            charts.TickSpec(2.0, label: "\$2.00"),
-            charts.TickSpec(4.0, label: "\$4.00"),
-            charts.TickSpec(6.0, label: "\$6.00"),
-            charts.TickSpec(8.0, label: "\$8.00"),
-            charts.TickSpec(10.0, label: "\$10.00"),
-          ]
+          _generatePriceTicks()
+        )
+      ),
+      domainAxis: charts.DateTimeAxisSpec(
+        viewport: charts.DateTimeExtents(
+          start: _getExtentStart(),
+          end: last,
         )
       ),
       behaviors: [
+        charts.SelectNearest(
+          eventTrigger: charts.SelectionTrigger.hover,
+          selectionModelType: SelectionModelType.info,
+          maximumDomainDistancePx: 400,
+          expandToDomain: true,
+        ),
         LinePointHighlighter(
-            symbolRenderer: CustomCircleSymbolRenderer()  // add this line in behaviours
-        )
+          selectionModelType: charts.SelectionModelType.info,
+          symbolRenderer: CustomCircleSymbolRenderer()
+        ),
       ],
       selectionModels: [
         SelectionModelConfig(
-            changedListener: (SelectionModel model) {
-              if(model.hasDatumSelection){
-                final value = model.selectedSeries[0].measureFn(model.selectedDatum[0].index);
-                CustomCircleSymbolRenderer.value = value;  // paints the tapped value
-              }
+          type: SelectionModelType.info,
+          changedListener: (SelectionModel model) {
+            if(model.hasDatumSelection){
+              final value = model.selectedDatum[0];
+              CustomCircleSymbolRenderer.index = value.index;
+              CustomCircleSymbolRenderer.indexTotal = model.selectedSeries[0].data.length;
+              CustomCircleSymbolRenderer.value = value.datum;  // paints the tapped value
             }
+          }
         )
       ],
     );
@@ -64,21 +137,30 @@ class IndexChart extends StatelessWidget {
 }
 
 class CustomCircleSymbolRenderer extends CircleSymbolRenderer {
-  static double value;
+  static IndexQuotePriceData value;
+  static int index;
+  static int indexTotal;
   @override
   void paint(ChartCanvas canvas, Rectangle<num> bounds, {List<int> dashPattern, Color fillColor, FillPatternType fillPattern, Color strokeColor, double strokeWidthPx}) {
     super.paint(canvas, bounds, dashPattern: dashPattern, fillColor: fillColor, strokeColor: strokeColor, strokeWidthPx: strokeWidthPx);
+
+    DateTime utc = DateTime.fromMillisecondsSinceEpoch(value.time.millisecondsSinceEpoch, isUtc: true);
+    DateTime local = utc.toLocal();
+
+    var proportion = index.toDouble() / (indexTotal.toDouble() - 1);
+    var leftOffset = -(proportion * 110) + 20;
+
     canvas.drawRect(
         Rectangle(bounds.left - 5, bounds.top - 30, bounds.width + 10, bounds.height + 10),
-        fill: Color.white
+        fill: Color.transparent
     );
     var textStyle = style.TextStyle();
     textStyle.color = Color.black;
     textStyle.fontSize = 15;
     canvas.drawText(
-        text.TextElement("\$$value", style: textStyle),
-        (bounds.left).round(),
-        (bounds.top - 28).round()
+        text.TextElement("\$${value.price}\n${DateFormat('M/d/yy HH:mm').format(local)}", style: textStyle),
+        (bounds.left + leftOffset).round(),
+        (bounds.top - 40).round()
     );
   }
 }
@@ -89,4 +171,9 @@ class IndexQuotePriceData {
   final double price;
 
   IndexQuotePriceData(this.time, this.price);
+}
+
+double _roundDouble(double value, int places){
+  double mod = pow(10.0, places);
+  return ((value * mod).round().toDouble() / mod);
 }

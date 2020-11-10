@@ -1,11 +1,14 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:rp10_index_server/index_quote.dart';
 import 'package:rp10_index_viewer/ui/index_chart.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 void main() {
+  tz.initializeTimeZones();
   runApp(MyApp());
 }
 
@@ -25,7 +28,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blueGrey,
         // This makes the visual density adapt to the platform that you run
         // the app on. For desktop platforms, the controls will be smaller and
         // closer together (more dense) than on mobile platforms.
@@ -69,7 +72,8 @@ class _MyHomePageState extends State<MyHomePage> {
     var start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
     try {
-      var response = await http.get("http://localhost:8000/quote?start=$start");
+      var urlRoot = kDebugMode ? "http://localhost:8000" : "http://manywords.press:8000";
+      var response = await http.get("$urlRoot/quote?start=$start");
 
       if(response.statusCode == 200) {
         var quotes = IndexQuote.listFromJson(jsonDecode(response.body));
@@ -106,37 +110,49 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Builder(
         builder: (context) {
           _innerContext = context;
-          return Center(
-            // Center is a layout widget. It takes a single child and positions it
-            // in the middle of the parent.
-            child: Column(
-              // Column is also a layout widget. It takes a list of children and
-              // arranges them vertically. By default, it sizes itself to fit its
-              // children horizontally, and tries to be as tall as its parent.
-              //
-              // Invoke "debug painting" (press "p" in the console, choose the
-              // "Toggle Debug Paint" action from the Flutter Inspector in Android
-              // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-              // to see the wireframe for each widget.
-              //
-              // Column has various properties to control how it sizes itself and
-              // how it positions its children. Here we use mainAxisAlignment to
-              // center the children vertically; the main axis here is the vertical
-              // axis because Columns are vertical (the cross axis would be
-              // horizontal).
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Container(
-                    width: double.infinity,
-                    height: 400,
-                    child: IndexChart(
-                      _quotes
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Center(
+              // Center is a layout widget. It takes a single child and positions it
+              // in the middle of the parent.
+              child: SingleChildScrollView(
+                child: Column(
+                  // Column is also a layout widget. It takes a list of children and
+                  // arranges them vertically. By default, it sizes itself to fit its
+                  // children horizontally, and tries to be as tall as its parent.
+                  //
+                  // Invoke "debug painting" (press "p" in the console, choose the
+                  // "Toggle Debug Paint" action from the Flutter Inspector in Android
+                  // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+                  // to see the wireframe for each widget.
+                  //
+                  // Column has various properties to control how it sizes itself and
+                  // how it positions its children. Here we use mainAxisAlignment to
+                  // center the children vertically; the main axis here is the vertical
+                  // axis because Columns are vertical (the cross axis would be
+                  // horizontal).
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      width: double.infinity,
+                      height: 400,
+                      child: IndexChart(
+                        _quotes
+                      ),
                     ),
-                  ),
+                    Container(
+                      width: 600,
+                      child: Text("The Rifle & Pistol 10 is an index of ammunition prices. It is a weighted sum of 10 common "
+                          "rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm "
+                          "and 5.56 receive double weight. The other calibers (.45, .40, .38 Special, .380, .308, .30-06, 7.62x39, "
+                          "7.62x54R) receive no weighting.\n\n"
+                          "If any caliber is entirely out of stock, \$10.00 is used as its cost per round. This will also "
+                          "happen if Ammoseek changes the format of their results page.\n\n"
+                          "If data doesn't appear, try resizing the window a bit. Flutter on the web is still not entirely mature.")
+                    )
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
