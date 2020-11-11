@@ -244,7 +244,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             "rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm "
                             "and 5.56 receive double weight. The other calibers receive no weighting. All searches are conducted with "
                             "the keyword 'FMJ'.\n\n"
-                            "For the purposes of the candlestick chart, the day begins at 8 a.m. Eastern and closes at 11 p.m.\n\n"
+                            "For the purposes of the candlestick chart, the trading day begins at 8 a.m. Eastern and ends at 11 p.m.\n\n"
                             "If any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker rule).\n\n"
                             "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
                             "Contact @JayGSlater on Twitter if anything breaks.")
