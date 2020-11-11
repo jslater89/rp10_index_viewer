@@ -167,6 +167,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_candlesticks:
+    dependency: "direct main"
+    description:
+      path: "../flutter-candlesticks"
+      relative: true
+    source: path
+    version: "0.1.4"
   flutter_test:
     dependency: "direct dev"
     description: flutter

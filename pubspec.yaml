@@ -27,6 +27,8 @@ dependencies:
   rp10_index_server:
     path: ../rp10_index_server
   timezone:
+  flutter_candlesticks:
+    path: ../flutter-candlesticks
 
   flutter:
     sdk: flutter

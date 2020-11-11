@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_candlesticks/flutter_candlesticks.dart';
 import 'package:http/http.dart' as http;
 import 'package:rp10_index_server/index_quote.dart';
 import 'package:rp10_index_viewer/ui/index_chart.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   tz.initializeTimeZones();
@@ -61,6 +63,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   BuildContext _innerContext;
   List<IndexQuote> _quotes = [];
+  List<Map<String, double>> _candlestickData = null;
 
   @override
   void initState() {
@@ -89,7 +92,43 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _addChartData(List<IndexQuote> quotes) {
+    List<Map<String, double>> data = [];
+    List<IndexQuote> dailyData = [];
+
+    for(var quote in quotes) {
+      if(dailyData.isEmpty) {
+        dailyData.add(quote);
+        continue;
+      }
+
+      // The 'exchange' is in EST
+      var est = tz.getLocation("America/New_York");
+      var lastExchangeTime = tz.TZDateTime.from(dailyData.last.time, est);
+      var thisExchangeTime = tz.TZDateTime.from(quote.time, est);
+      var endOfLastDay = tz.TZDateTime(est, lastExchangeTime.year, lastExchangeTime.month, lastExchangeTime.day, 23, 59, 59, 999);
+      //
+      // print("Daily data last: ${dailyData.last.time} ${dailyData.last.time.isUtc}");
+      // print("Exchange time: $lastExchangeTime");
+      // print("End of last day: $endOfLastDay");
+
+      if(thisExchangeTime.isAfter(endOfLastDay)) {
+        //print("Switching day: $thisExchangeTime is after $endOfLastDay");
+        if(dailyData.isNotEmpty) data.add(_calculateCandlestickData(dailyData));
+        dailyData = [quote];
+      }
+      else {
+        dailyData.add(quote);
+      }
+
+      //print("Done\n");
+    }
+
+    if(dailyData.isNotEmpty) {
+      data.add(_calculateCandlestickData(dailyData));
+    }
+
     setState(() {
+      _candlestickData = data;
       _quotes = quotes;
     });
 
@@ -98,6 +137,30 @@ class _MyHomePageState extends State<MyHomePage> {
         _quotes = quotes;
       })
     });
+  }
+
+  Map<String, double> _calculateCandlestickData(List<IndexQuote> _dailyData) {
+    double high = 0, low = 1000, open = 0, close = 0;
+    for(var quote in _dailyData) {
+      var est = tz.getLocation("America/New_York");
+      var exchangeTime = tz.TZDateTime.from(quote.time, est);
+
+      if(quote.indexPrice > high) high = quote.indexPrice;
+      if(quote.indexPrice < low) low = quote.indexPrice;
+      if(open == 0 && exchangeTime.hour >= 8) {
+        open = quote.indexPrice;
+      }
+    }
+    if(open == 0) open = _dailyData.first.indexPrice;
+    close = _dailyData.last.indexPrice;
+
+    return {
+      "open": open,
+      "close": close,
+      "high": high,
+      "low": low,
+      "volumeto": 1,
+    };
   }
 
   @override
@@ -147,14 +210,30 @@ class _MyHomePageState extends State<MyHomePage> {
                         _quotes
                       ),
                     ),
+                    SizedBox(height: 10),
+                    Container(
+                      width: _candlestickData != null ? 25 * _candlestickData.length : 0,
+                      height: 200,
+                      child: _candlestickData != null ? OHLCVGraph(
+                        // increaseColor: Colors.red,
+                        // decreaseColor: Colors.green,
+                        fillDecreasing: false,
+                        enableGridLines: true,
+                        gridLineAmount: 5,
+                        volumeProp: 0.0,
+                        data: _candlestickData,
+                      ) : Container(),
+                    ),
+                    SizedBox(height: 20),
                     Container(
                       width: 600,
                       child: Text("The Rifle & Pistol 10 is an index of ammunition prices. It is a weighted sum of 10 common "
                           "rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm "
                           "and 5.56 receive double weight. The other calibers receive no weighting. All searches are conducted with "
                           "the keyword 'FMJ'.\n\n"
-                          "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
+                          "For the purposes of the candlestick chart, the day begins at 8 a.m. Eastern and closes at 11 p.m.\n\n"
                           "If any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker rule).\n\n"
+                          "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
                           "Contact @JayGSlater on Twitter if anything breaks.")
                     )
                   ],
