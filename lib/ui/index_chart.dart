@@ -22,8 +22,9 @@ class IndexChart extends StatelessWidget {
   final DateTime last;
   final double highPrice;
   final double lowPrice;
+  final bool touchMode;
 
-  factory IndexChart(List<IndexQuote> quotes) {
+  factory IndexChart(List<IndexQuote> quotes, {bool touchMode = false}) {
     double highPrice = 0, lowPrice = 1000;
     DateTime first = DateTime(3000), last = DateTime(0);
 
@@ -50,10 +51,11 @@ class IndexChart extends StatelessWidget {
       last: last,
       highPrice: highPrice,
       lowPrice: lowPrice,
+      touchMode: touchMode,
     );
   }
 
-  IndexChart._internal(this._seriesList, {this.animate, this.first, this.last, this.highPrice, this.lowPrice});
+  IndexChart._internal(this._seriesList, {this.animate, this.first, this.last, this.highPrice, this.lowPrice, this.touchMode});
 
   List<charts.TickSpec<double>> _generatePriceTicks() {
     final topTick = _roundDouble(highPrice * 1.1, 2);
@@ -99,6 +101,26 @@ class IndexChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    var selectBehavior;
+
+    if(!touchMode) {
+      selectBehavior = charts.SelectNearest(
+        eventTrigger: charts.SelectionTrigger.hover,
+        selectionModelType: SelectionModelType.info,
+        maximumDomainDistancePx: 400,
+        expandToDomain: true,
+      );
+    }
+    else {
+      selectBehavior = charts.SelectNearest(
+        eventTrigger: charts.SelectionTrigger.tap,
+        selectionModelType: SelectionModelType.info,
+        maximumDomainDistancePx: 400,
+        expandToDomain: true,
+      );
+    }
+
     return charts.TimeSeriesChart(
       _seriesList,
       animate: animate,
@@ -114,12 +136,7 @@ class IndexChart extends StatelessWidget {
         )
       ),
       behaviors: [
-        charts.SelectNearest(
-          eventTrigger: charts.SelectionTrigger.hover,
-          selectionModelType: SelectionModelType.info,
-          maximumDomainDistancePx: 400,
-          expandToDomain: true,
-        ),
+        selectBehavior,
         LinePointHighlighter(
           selectionModelType: charts.SelectionModelType.info,
           symbolRenderer: CustomCircleSymbolRenderer()

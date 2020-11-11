@@ -29,6 +29,7 @@ dependencies:
   timezone:
   flutter_candlesticks:
     path: ../flutter-candlesticks
+  platform_detect:
 
   flutter:
     sdk: flutter
