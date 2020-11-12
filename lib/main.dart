@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -244,13 +245,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   ]..addAll([
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        if(constraints.maxWidth < 850) {
+                        if(constraints.maxWidth < 750) {
                           return Column(
                             children: [
                               Container(
                                 width: double.infinity,
                                 height: secondRowHeight,
-                                child: _candlestickData != null ? CandlestickChart(secondRowHeight: secondRowHeight, candlestickData: _candlestickData) : Container(),
+                                child: _candlestickData != null ? CandlestickChart(candlestickData: _candlestickData) : Container(),
                               ),
                               SizedBox(height: 10),
                               SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices),
@@ -262,10 +263,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             width: double.infinity,
                             height: secondRowHeight,
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Expanded(
+                                Flexible(
                                   flex: 5,
-                                  child: _candlestickData != null ? CandlestickChart(secondRowHeight: secondRowHeight, candlestickData: _candlestickData) : Container(),
+                                  child: _candlestickData != null ? CandlestickChart(candlestickData: _candlestickData) : Container(),
                                 ),
                                 SizedBox(width: 10),
                                 Expanded(
@@ -289,7 +292,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           "If any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker Rule).\n\n"
                           "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
                           "Contact @JayGSlater on Twitter if anything breaks.")
-                    )
+                    ),
+                    SizedBox(height: 50),
                   ]),
                 ),
               ),
