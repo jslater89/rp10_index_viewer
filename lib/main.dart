@@ -3,13 +3,15 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_candlesticks/flutter_candlesticks.dart';
 import 'package:http/http.dart' as http;
+import 'package:rp10_index_server/ammo_price.dart';
+import 'package:rp10_index_server/caliber.dart';
 import 'package:rp10_index_server/index_quote.dart';
+import 'package:rp10_index_viewer/ui/homescreen/candlestick_chart.dart';
+import 'package:rp10_index_viewer/ui/homescreen/sparkline_grid.dart';
 import 'package:rp10_index_viewer/ui/index_chart.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:platform_detect/platform_detect.dart';
 
 void main() {
   tz.initializeTimeZones();
@@ -62,17 +64,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const urlRoot = kDebugMode ? "http://localhost:8000" : "https://rp10.manywords.press";
+
+
   BuildContext _innerContext;
   List<IndexQuote> _quotes = [];
-  List<Map<String, double>> _candlestickData = null;
+  List<Map<String, double>> _candlestickData;
+  Map<String, List<AmmoPrice>> _sparklinePrices = {};
   bool _touchMode = false;
 
   @override
   void initState() {
     super.initState();
 
+    for(var caliber in Caliber.values) {
+      _sparklinePrices[caliber.url] = [];
+    }
+
     _checkPlatform();
-    _fetchData();
+    _fetchIndexData();
+    _fetchSparklineData();
   }
 
   Future<void> _checkPlatform() async {
@@ -83,11 +94,10 @@ class _MyHomePageState extends State<MyHomePage> {
     // }
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _fetchIndexData() async {
     var start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
     try {
-      var urlRoot = kDebugMode ? "http://localhost:8000" : "https://rp10.manywords.press";
       var response = await http.get("$urlRoot/quote?start=$start");
 
       if(response.statusCode == 200) {
@@ -96,6 +106,28 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       else {
         Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Response code: ${response.statusCode}")));
+      }
+    } catch(e) {
+      Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
+  Future<void> _fetchSparklineData() async {
+    var start = DateTime.now().toUtc().subtract(Duration(days: 30));
+    start = DateTime(start.year, start.month, start.day);
+    try {
+      var response = await http.get("$urlRoot/price?start=$start");
+
+      if(response.statusCode == 200) {
+        Map<String, dynamic> quotes = jsonDecode(response.body);
+        Map<String, List<AmmoPrice>> prices = {};
+        for(String caliberUrl in quotes.keys) {
+          prices[caliberUrl] = AmmoPrice.listFromJson(quotes[caliberUrl]);
+        }
+
+        Timer(Duration(milliseconds: 1250), () => setState(() {
+          _sparklinePrices = prices;
+        }));
       }
     } catch(e) {
       Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -143,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _quotes = quotes;
     });
 
-    Timer(Duration(milliseconds: 1000), () => {
+    Timer(Duration(milliseconds: 1250), () => {
       setState((){
         _quotes = quotes;
       })
@@ -176,6 +208,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    const firstRowHeight = 400.0;
+    const secondRowHeight = 200.0;
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -194,63 +228,69 @@ class _MyHomePageState extends State<MyHomePage> {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
             child: SafeArea(
-              child: Center(
-                // Center is a layout widget. It takes a single child and positions it
-                // in the middle of the parent.
-                child: SingleChildScrollView(
-                  child: Column(
-                    // Column is also a layout widget. It takes a list of children and
-                    // arranges them vertically. By default, it sizes itself to fit its
-                    // children horizontally, and tries to be as tall as its parent.
-                    //
-                    // Invoke "debug painting" (press "p" in the console, choose the
-                    // "Toggle Debug Paint" action from the Flutter Inspector in Android
-                    // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-                    // to see the wireframe for each widget.
-                    //
-                    // Column has various properties to control how it sizes itself and
-                    // how it positions its children. Here we use mainAxisAlignment to
-                    // center the children vertically; the main axis here is the vertical
-                    // axis because Columns are vertical (the cross axis would be
-                    // horizontal).
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        width: double.infinity,
-                        height: 400,
-                        child: IndexChart(
-                          _quotes,
-                          touchMode: _touchMode,
-                        ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      width: double.infinity,
+                      height: firstRowHeight,
+                      child: IndexChart(
+                        _quotes,
+                        touchMode: _touchMode,
                       ),
-                      SizedBox(height: 10),
-                      Container(
-                        width: _candlestickData != null ? 25 * _candlestickData.length : 0,
-                        height: 200,
-                        child: _candlestickData != null ? OHLCVGraph(
-                          // increaseColor: Colors.red,
-                          // decreaseColor: Colors.green,
-                          fillDecreasing: false,
-                          enableGridLines: true,
-                          gridLineAmount: 5,
-                          volumeProp: 0.0,
-                          data: _candlestickData,
-                        ) : Container(),
-                      ),
-                      SizedBox(height: 20),
-                      Container(
-                        width: 600,
-                        child: Text("The Rifle & Pistol 10 is an index of ammunition prices. It is a weighted sum of 10 common "
-                            "rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm "
-                            "and 5.56 receive double weight. The other calibers receive no weighting. All searches are conducted with "
-                            "the keyword 'FMJ'.\n\n"
-                            "For the purposes of the candlestick chart, the trading day begins at 8 a.m. Eastern and ends at 11 p.m.\n\n"
-                            "If any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker rule).\n\n"
-                            "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
-                            "Contact @JayGSlater on Twitter if anything breaks.")
-                      )
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 10),
+                  ]..addAll([
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        if(constraints.maxWidth < 850) {
+                          return Column(
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                height: secondRowHeight,
+                                child: _candlestickData != null ? CandlestickChart(secondRowHeight: secondRowHeight, candlestickData: _candlestickData) : Container(),
+                              ),
+                              SizedBox(height: 10),
+                              SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices),
+                            ]
+                          );
+                        }
+                        else {
+                          return Container(
+                            width: double.infinity,
+                            height: secondRowHeight,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: _candlestickData != null ? CandlestickChart(secondRowHeight: secondRowHeight, candlestickData: _candlestickData) : Container(),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  flex: 2,
+                                  child: SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    )
+                  ])..addAll([
+                    SizedBox(height: 20),
+                    Container(
+                      width: 600,
+                      child: Text("The Rifle & Pistol 10 is an index of ammunition prices. It is a weighted sum of 10 common "
+                          "rifle and pistol calibers' costs per round. Ammoseek.com searches once per hour supply the data. 9mm "
+                          "and 5.56 receive double weight. The other calibers receive no weighting. All searches are conducted with "
+                          "the keyword 'FMJ'.\n\n"
+                          "If any caliber is entirely out of stock, it contributes to the index at 125% of its last recorded price (the Gunbroker Rule).\n\n"
+                          "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
+                          "Contact @JayGSlater on Twitter if anything breaks.")
+                    )
+                  ]),
                 ),
               ),
             ),

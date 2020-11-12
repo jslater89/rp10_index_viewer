@@ -14,9 +14,10 @@ import 'package:intl/intl.dart';
 import 'package:rp10_index_server/index_quote.dart';
 import 'package:charts_flutter/src/text_element.dart' as text;
 import 'package:charts_flutter/src/text_style.dart' as style;
+import 'package:rp10_index_viewer/util/utils.dart';
 
 class IndexChart extends StatelessWidget {
-  final List<charts.Series<IndexQuotePriceData, DateTime>> _seriesList;
+  final List<charts.Series<IndexQuote, DateTime>> _seriesList;
   final bool animate;
   final DateTime first;
   final DateTime last;
@@ -36,10 +37,10 @@ class IndexChart extends StatelessWidget {
     }
 
     var seriesList = [
-      charts.Series<IndexQuotePriceData, DateTime>(
-        data: quotes.map((it) => IndexQuotePriceData(it.time, it.indexPrice)).toList(),
+      charts.Series<IndexQuote, DateTime>(
+        data: quotes,
         domainFn: (datum, _) => datum.time,
-        measureFn: (datum, _) => datum.price,
+        measureFn: (datum, _) => datum.indexPrice,
         id: 'Index Quotes',
         colorFn: (datum, _) => charts.Color.fromHex(code: "#455A64"),
       )
@@ -78,27 +79,6 @@ class IndexChart extends StatelessWidget {
     return ticks;
   }
 
-  DateTime _getExtentStart() {
-    var difference = last.difference(first);
-    var localFirst = first;
-    if(difference.inDays < 1) {
-      localFirst = last.subtract(Duration(days: 1));
-    }
-    else if(difference.inDays < 3) {
-      localFirst = last.subtract(Duration(days: 3));
-    }
-    else if(difference.inDays < 7) {
-      localFirst = last.subtract(Duration(days: 7));
-    }
-    else if(difference.inDays < 14) {
-      localFirst = last.subtract(Duration(days: 14));
-    }
-    else if(difference.inDays < 30) {
-      localFirst = last.subtract(Duration(days: 30));
-    }
-    return localFirst;
-  }
-
   @override
   Widget build(BuildContext context) {
 
@@ -131,7 +111,7 @@ class IndexChart extends StatelessWidget {
       ),
       domainAxis: charts.DateTimeAxisSpec(
         viewport: charts.DateTimeExtents(
-          start: _getExtentStart(),
+          start: Utilities.getExtentStart(first, last),
           end: last,
         )
       ),
@@ -160,7 +140,7 @@ class IndexChart extends StatelessWidget {
 }
 
 class CustomCircleSymbolRenderer extends CircleSymbolRenderer {
-  static IndexQuotePriceData value;
+  static IndexQuote value;
   static int index;
   static int indexTotal;
   @override
@@ -181,19 +161,11 @@ class CustomCircleSymbolRenderer extends CircleSymbolRenderer {
     textStyle.color = Color.black;
     textStyle.fontSize = 15;
     canvas.drawText(
-        text.TextElement("\$${value.price.toStringAsFixed(3)}\n${DateFormat('M/d/yy HH:mm').format(local)}", style: textStyle),
+        text.TextElement("\$${value.indexPrice.toStringAsFixed(3)}\n${DateFormat('M/d/yy HH:mm').format(local)}", style: textStyle),
         (bounds.left + leftOffset).round(),
         (bounds.top - 40).round()
     );
   }
-}
-
-/// Sample time series data type.
-class IndexQuotePriceData {
-  final DateTime time;
-  final double price;
-
-  IndexQuotePriceData(this.time, this.price);
 }
 
 double _roundDouble(double value, int places){
