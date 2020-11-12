@@ -15,8 +15,10 @@ class CandlestickChart extends StatelessWidget {
   Widget build(BuildContext context) {
     var availableSize = MediaQuery.of(context).size;
     return Tooltip(
-      message: "For this chart, the 'trading day' begins at 8 a.m. Eastern and ends with the last "
-          "report of the day at 11 p.m.",
+      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      message: "For this chart, the 'trading day' opens at 8 a.m. Eastern and closes with the last "
+          "report of the day at 11 p.m.\nCandlesticks are green if today's close is higher than yesterday's close.\n"
+          "Candlesticks are hollow if today's close is higher than today's open.",
       preferBelow: true,
       verticalOffset: 110,
       child: ConstrainedBox(
@@ -26,7 +28,7 @@ class CandlestickChart extends StatelessWidget {
         child: OHLCVGraph(
           // increaseColor: Colors.red,
           // decreaseColor: Colors.green,
-          fillDecreasing: false,
+          previousDayMode: true,
           enableGridLines: true,
           gridLineAmount: 5,
           volumeProp: 0.0,
