@@ -251,6 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               Container(
                                 width: double.infinity,
                                 height: secondRowHeight,
+                                alignment: Alignment.center,
                                 child: _candlestickData != null ? CandlestickChart(candlestickData: _candlestickData) : Container(),
                               ),
                               SizedBox(height: 10),
@@ -293,7 +294,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           "Calibers: 9mm, .45, .40, .38 Special, .380, 5.56, .308, .30-06, 7.62x39, 7.62x54R.\n\n"
                           "Contact @JayGSlater on Twitter if anything breaks.")
                     ),
-                    SizedBox(height: 50),
+                    SizedBox(height: 100),
                   ]),
                 ),
               ),

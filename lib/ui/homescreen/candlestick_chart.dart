@@ -14,15 +14,15 @@ class CandlestickChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var availableSize = MediaQuery.of(context).size;
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: _candlestickData != null ? min(availableSize.width, 25.0 * _candlestickData.length) : 0,
-      ),
-      child: Tooltip(
-        message: "For this chart, the 'trading day' begins at 8 a.m. Eastern and ends with the last "
-            "report of the day at 11 p.m.",
-        preferBelow: true,
-        verticalOffset: 110,
+    return Tooltip(
+      message: "For this chart, the 'trading day' begins at 8 a.m. Eastern and ends with the last "
+          "report of the day at 11 p.m.",
+      preferBelow: true,
+      verticalOffset: 110,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: _candlestickData != null ? min(availableSize.width, 25.0 * _candlestickData.length) : 0,
+        ),
         child: OHLCVGraph(
           // increaseColor: Colors.red,
           // decreaseColor: Colors.green,
