@@ -51764,7 +51764,7 @@ Y.pC.prototype={
 L:function(a,b){var s,r=F.c6(b,!1).a,q=this.c
 if(q!=null){s=q.length
 s=Math.min(H.H(r.a),25*s)}else s=0
-return S.a4E(new T.ei(new S.aF(0,s,0,1/0),new U.A6(q,!0,5,0,!0,null),null),"For this chart, the 'trading day' opens at 8 a.m. Eastern and closes with the last report of the day at 11 p.m.\nCandlesticks are green if today's close is higher than yesterday's close.\nCandlesticks are hollow if today's close is higher than today's open.",new V.ba(12,8,12,8),!0,110)}}
+return S.a4E(new T.ei(new S.aF(0,s,0,1/0),new U.A6(q,!0,5,0,!0,null),null),"For this chart, the 'trading day' opens at 8 a.m. Eastern and closes with the last report of the day at 11 p.m.\nCandlesticks are green if the day's close is higher than the previous day's close.\nCandlesticks are hollow if the day's close is higher than the day's open.",new V.ba(12,8,12,8),!0,110)}}
 S.tA.prototype={
 L:function(a,b){var s=null,r=this.c,q=this.d,p=t.fQ
 return T.Um(H.c([T.ds(M.eU(s,T.Ls(H.c([T.ds(new E.dT("9mm",q.i(0,E.fP(C.fU)),s),1),T.cK(s,5,s),T.ds(new E.dT(".45",q.i(0,E.fP(C.fV)),s),1),T.cK(s,5,s),T.ds(new E.dT(".40",q.i(0,E.fP(C.fW)),s),1),T.cK(s,5,s),T.ds(new E.dT(".38Spl",q.i(0,E.fP(C.fX)),s),1),T.cK(s,5,s),T.ds(new E.dT(".380",q.i(0,E.fP(C.fY)),s),1)],p),C.bQ,C.cR),s,s,s,r,s,s,s),1),T.ds(M.eU(s,T.Ls(H.c([T.ds(new E.dT("5.56",q.i(0,E.fP(C.fZ)),s),1),T.cK(s,5,s),T.ds(new E.dT(".308",q.i(0,E.fP(C.h_)),s),1),T.cK(s,5,s),T.ds(new E.dT(".30-06",q.i(0,E.fP(C.h0)),s),1),T.cK(s,5,s),T.ds(new E.dT("x39",q.i(0,E.fP(C.h1)),s),1),T.cK(s,5,s),T.ds(new E.dT("x54R",q.i(0,E.fP(C.h2)),s),1)],p),C.bQ,C.cR),s,s,s,r,s,s,s),1)],p),C.dl,C.bQ,C.cR)}}
