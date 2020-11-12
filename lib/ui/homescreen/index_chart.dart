@@ -151,7 +151,7 @@ class CustomCircleSymbolRenderer extends CircleSymbolRenderer {
     DateTime local = utc.toLocal();
 
     var proportion = index.toDouble() / (indexTotal.toDouble() - 1);
-    var leftOffset = -(proportion * 110) + 20;
+    var leftOffset = -(proportion * 110) + 10;
 
     canvas.drawRect(
         Rectangle(bounds.left - 5, bounds.top - 30, bounds.width + 10, bounds.height + 10),

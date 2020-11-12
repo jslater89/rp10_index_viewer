@@ -10,7 +10,7 @@ import 'package:rp10_index_server/caliber.dart';
 import 'package:rp10_index_server/index_quote.dart';
 import 'package:rp10_index_viewer/ui/homescreen/candlestick_chart.dart';
 import 'package:rp10_index_viewer/ui/homescreen/sparkline_grid.dart';
-import 'package:rp10_index_viewer/ui/index_chart.dart';
+import 'package:rp10_index_viewer/ui/homescreen/index_chart.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
