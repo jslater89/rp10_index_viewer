@@ -245,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ]..addAll([
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        if(constraints.maxWidth < 750) {
+                        if(constraints.maxWidth < 960) {
                           return Column(
                             children: [
                               Container(
