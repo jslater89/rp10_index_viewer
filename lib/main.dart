@@ -126,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
           prices[caliberUrl] = AmmoPrice.listFromJson(quotes[caliberUrl]);
         }
 
-        Timer(Duration(milliseconds: 1250), () => setState(() {
+        Timer(Duration(milliseconds: 2000), () => setState(() {
           _sparklinePrices = prices;
         }));
       }
