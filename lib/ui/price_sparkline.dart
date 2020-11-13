@@ -37,8 +37,8 @@ class PriceSparkline extends StatelessWidget {
         measureFn: (datum, _) => datum.price,
         id: 'Caliber Sparkline',
         colorFn: (datum, _) => datum.inStock ? ChartColors.blueGray : ChartColors.red,
-        strokeWidthPxFn: (_, __) => 1,
-      )
+        strokeWidthPxFn: (_, __) => 1.25,
+      )..setAttribute(charts.measureAxisIdKey, charts.Axis.secondaryMeasureAxisId),
     ];
 
     return PriceSparkline._internal(
@@ -69,11 +69,34 @@ class PriceSparkline extends StatelessWidget {
       child: charts.TimeSeriesChart(
         _seriesList,
         animate: animate,
+        secondaryMeasureAxis: charts.NumericAxisSpec(
+            renderSpec: charts.SmallTickRendererSpec(
+              tickLengthPx: 3,
+              lineStyle: charts.LineStyleSpec(
+                thickness: 1,
+              ),
+              axisLineStyle: charts.LineStyleSpec(
+                thickness: 0,
+                dashPattern: [0, 1]
+              ),
+              labelStyle: charts.TextStyleSpec(
+                fontSize: 0,
+              )
+            ),
+            viewport: charts.NumericExtents(
+                extentLow, extentHigh
+            ),
+            tickProviderSpec: charts.StaticNumericTickProviderSpec([
+              charts.TickSpec<double>(extentLow, label: ""),
+              charts.TickSpec<double>((extentLow + extentHigh) / 2, label: ""),
+              charts.TickSpec<double>(extentHigh, label: ""),
+            ])
+        ),
         primaryMeasureAxis: charts.NumericAxisSpec(
-          renderSpec: charts.NoneRenderSpec<num>(),
-          viewport: charts.NumericExtents(
-            extentLow, extentHigh
-          )
+            renderSpec: charts.NoneRenderSpec(),
+            viewport: charts.NumericExtents(
+                extentLow, extentHigh
+            ),
         ),
         domainAxis: charts.DateTimeAxisSpec(
           viewport: charts.DateTimeExtents(
@@ -81,7 +104,11 @@ class PriceSparkline extends StatelessWidget {
             end: last,
           ),
           showAxisLine: true,
-          renderSpec: charts.NoneRenderSpec<DateTime>()
+          renderSpec: charts.NoneRenderSpec<DateTime>(
+            axisLineStyle: charts.LineStyleSpec(
+              thickness: 1,
+            )
+          )
         ),
       ),
     );
