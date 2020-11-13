@@ -5,9 +5,11 @@ import 'package:rp10_index_viewer/ui/price_sparkline.dart';
 class LabeledAmmoSparkline extends StatelessWidget {
   final String label;
   final List<AmmoPrice> prices;
+  final double extentLow;
+  final double extentHigh;
 
   const LabeledAmmoSparkline({
-    Key key, this.label, this.prices,
+    Key key, this.label, this.prices, this.extentLow, this.extentHigh,
   }) : super(key: key);
 
   @override
@@ -16,7 +18,7 @@ class LabeledAmmoSparkline extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(width: 45, child: Align(alignment: Alignment.bottomRight, child: Text(label, softWrap: false, overflow: TextOverflow.fade,))),
-        Expanded(flex: 15, child: PriceSparkline(prices)),
+        Expanded(flex: 15, child: PriceSparkline(prices, extentLow: extentLow, extentHigh: extentHigh)),
       ],
     );
   }

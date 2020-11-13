@@ -11,8 +11,10 @@ class PriceSparkline extends StatelessWidget {
   final DateTime last;
   final double lastPrice;
   final bool hasOutOfStock;
+  final double extentLow;
+  final double extentHigh;
 
-  factory PriceSparkline(List<AmmoPrice> prices, {bool touchMode = false}) {
+  factory PriceSparkline(List<AmmoPrice> prices, {bool touchMode = false, double extentLow, double extentHigh}) {
     double highPrice = 0,
         lowPrice = 1000;
     DateTime first = DateTime(3000),
@@ -40,11 +42,18 @@ class PriceSparkline extends StatelessWidget {
     ];
 
     return PriceSparkline._internal(
-      seriesList, animate: false, first: first, last: last, lastPrice: prices.length > 0 ? prices.last.price : 0, hasOutOfStock: hasOutOfStock,
+      seriesList,
+      animate: false,
+      first: first,
+      last: last,
+      lastPrice: prices.length > 0 ? prices.last.price : 0,
+      hasOutOfStock: hasOutOfStock,
+      extentLow: extentLow ?? lowPrice,
+      extentHigh: extentHigh ?? highPrice,
     );
   }
 
-  PriceSparkline._internal(this._seriesList, {this.animate, this.first, this.last, this.lastPrice, this.hasOutOfStock});
+  PriceSparkline._internal(this._seriesList, {this.animate, this.first, this.last, this.lastPrice, this.hasOutOfStock, this.extentLow, this.extentHigh});
 
 
   @override
@@ -60,8 +69,11 @@ class PriceSparkline extends StatelessWidget {
       child: charts.TimeSeriesChart(
         _seriesList,
         animate: animate,
-        primaryMeasureAxis: charts.AxisSpec(
-            renderSpec: charts.NoneRenderSpec<num>()
+        primaryMeasureAxis: charts.NumericAxisSpec(
+          renderSpec: charts.NoneRenderSpec<num>(),
+          viewport: charts.NumericExtents(
+            extentLow, extentHigh
+          )
         ),
         domainAxis: charts.DateTimeAxisSpec(
           viewport: charts.DateTimeExtents(
