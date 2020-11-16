@@ -98,6 +98,7 @@ class PriceSparkline extends StatelessWidget {
                 extentLow, extentHigh
             ),
         ),
+        defaultInteractions: false,
         domainAxis: charts.DateTimeAxisSpec(
           viewport: charts.DateTimeExtents(
             start: Utilities.getExtentStart(first, last),
