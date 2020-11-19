@@ -30,10 +30,29 @@ class IndexChart extends StatelessWidget {
     DateTime first = DateTime(3000), last = DateTime(0);
 
     for(var quote in quotes) {
-      if(quote.indexPrice < lowPrice) lowPrice = quote.indexPrice;
-      if(quote.indexPrice > highPrice) highPrice = quote.indexPrice;
+      if(quote.indexPrice != null && quote.indexPrice < lowPrice) lowPrice = quote.indexPrice;
+      if(quote.indexPrice != null && quote.indexPrice > highPrice) highPrice = quote.indexPrice;
       if(quote.time.isBefore(first)) first = quote.time;
       if(quote.time.isAfter(last)) last = quote.time;
+    }
+
+    if(quotes.length > 2) {
+      for (int i = 1; i < quotes.length; i++) {
+        var lastQuote = quotes[i-1];
+        var currentQuote = quotes[i];
+
+        // Add a null quote so we get a gap
+        if(lastQuote.time.isBefore(currentQuote.time.subtract(Duration(minutes: 70)))) {
+          var dummyQuote = IndexQuote();
+          dummyQuote.indexPrice = null;
+          dummyQuote.time = lastQuote.time.add(Duration(minutes: 1));
+          quotes.insert(i, dummyQuote);
+
+          // Adding the quote means the old currentQuote is i+1, and we want
+          // to be on the quote after currentQuote, so add 1 to i.
+          i += 1;
+        }
+      }
     }
 
     var seriesList = [
@@ -42,6 +61,7 @@ class IndexChart extends StatelessWidget {
         domainFn: (datum, _) => datum.time,
         measureFn: (datum, _) => datum.indexPrice,
         id: 'Index Quotes',
+
         colorFn: (datum, _) => charts.Color.fromHex(code: "#455A64"),
       )
     ];

@@ -30,6 +30,25 @@ class PriceSparkline extends StatelessWidget {
       if(!price.inStock) hasOutOfStock = true;
     }
 
+    if(prices.length > 2) {
+      for (int i = 1; i < prices.length; i++) {
+        var lastQuote = prices[i-1];
+        var currentQuote = prices[i];
+
+        // Add a null quote so we get a gap
+        if(lastQuote.time.isBefore(currentQuote.time.subtract(Duration(minutes: 70)))) {
+          var dummyQuote = AmmoPrice();
+          dummyQuote.price = null;
+          dummyQuote.time = lastQuote.time.add(Duration(minutes: 1));
+          prices.insert(i, dummyQuote);
+
+          // Adding the quote means the old currentQuote is i+1, and we want
+          // to be on the quote after currentQuote, so add 1 to i.
+          i += 1;
+        }
+      }
+    }
+
     var seriesList = [
       charts.Series<AmmoPrice, DateTime>(
         data: prices,
