@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:rp10_index_server/ammo_price.dart';
 import 'package:rp10_index_server/caliber.dart';
 import 'package:rp10_index_server/index_quote.dart';
+import 'package:rp10_index_viewer/ui/homescreen/date_controls.dart';
 import 'package:rp10_index_viewer/ui/homescreen/candlestick_chart.dart';
 import 'package:rp10_index_viewer/ui/homescreen/sparkline_grid.dart';
 import 'package:rp10_index_viewer/ui/homescreen/index_chart.dart';
@@ -83,8 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     _checkPlatform();
-    _fetchIndexData();
-    _fetchSparklineData();
+    _fetchIndexData(null, null);
+    _fetchSparklineData(null, null);
   }
 
   Future<void> _checkPlatform() async {
@@ -95,11 +96,13 @@ class _MyHomePageState extends State<MyHomePage> {
     // }
   }
 
-  Future<void> _fetchIndexData() async {
-    var start = DateTime.now().toUtc().subtract(Duration(days: 30));
+  Future<void> _fetchIndexData(DateTime start, DateTime end) async {
+    if(start == null) start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
     try {
-      var response = await http.get("$urlRoot/quote?start=$start");
+      var url = "$urlRoot/quote?start=$start";
+      if(end != null) url = "$urlRoot/quote?start=$start&end=$end";
+      var response = await http.get(url);
 
       if(response.statusCode == 200) {
         var quotes = IndexQuote.listFromJson(jsonDecode(response.body));
@@ -113,11 +116,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _fetchSparklineData() async {
-    var start = DateTime.now().toUtc().subtract(Duration(days: 30));
+  Future<void> _fetchSparklineData(DateTime start, DateTime end) async {
+    if(start == null) start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
     try {
-      var response = await http.get("$urlRoot/price?start=$start");
+      var url = "$urlRoot/price?start=$start";
+      if(end != null) url = "$urlRoot/price?start=$start&end=$end";
+      var response = await http.get(url);
 
       if(response.statusCode == 200) {
         Map<String, dynamic> quotes = jsonDecode(response.body);
@@ -207,6 +212,11 @@ class _MyHomePageState extends State<MyHomePage> {
     };
   }
 
+  void _updateData(DateTime start, DateTime end) async {
+    _fetchIndexData(start, end);
+    _fetchSparklineData(start, end);
+  }
+
   @override
   Widget build(BuildContext context) {
     const firstRowHeight = 400.0;
@@ -242,6 +252,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     SizedBox(height: 10),
+                    DateControls(
+                      startingDate: DateTime.now().toUtc().subtract(Duration(days: 30)),
+                      onDateRangeChanged: _updateData,
+                    )
                   ]..addAll([
                     LayoutBuilder(
                       builder: (context, constraints) {

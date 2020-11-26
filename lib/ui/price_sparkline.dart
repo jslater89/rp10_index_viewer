@@ -22,6 +22,7 @@ class PriceSparkline extends StatelessWidget {
     bool hasOutOfStock = false;
 
     for (var price in prices) {
+      if(price.price == null) continue;
       if (price.price < lowPrice) lowPrice = price.price;
       if (price.price > highPrice) highPrice = price.price;
       if (price.time.isBefore(first)) first = price.time;

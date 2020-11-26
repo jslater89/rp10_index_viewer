@@ -18,8 +18,9 @@ class SparklineGrid extends StatelessWidget {
     double lowExtent = 1000;
     double highExtent = 0;
 
-    for(var caliberPrices in _sparklinePrices.values) {
+    for(var caliberPrices in _sparklinePrices?.values ?? []) {
       for(var price in caliberPrices) {
+        if(price.price == null) continue;
         if(price.price < lowExtent) lowExtent = price.price;
         if(price.price > highExtent) highExtent = price.price;
       }
