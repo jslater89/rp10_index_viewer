@@ -23,8 +23,9 @@ class _DateControlsState extends State<DateControls> {
     startDate = DateTime(widget.startingDate.year, widget.startingDate.month, widget.startingDate.day);
   }
 
-  DateTime _parseDate(DateTime date) {
-    return DateTime(date.year, date.month, date.day);
+  DateTime _parseDate(DateTime date, {bool start: true}) {
+    if(start) return DateTime(date.year, date.month, date.day);
+    else return DateTime(date.year, date.month, date.day, 23, 59, 59);
   }
 
   void _setStartDate(DateTime date) {
@@ -38,7 +39,7 @@ class _DateControlsState extends State<DateControls> {
   }
 
   void _setEndDate(DateTime date) {
-    var parsedDate = _parseDate(date);
+    var parsedDate = _parseDate(date, start: false);
 
     setState(() {
       endDate = parsedDate;

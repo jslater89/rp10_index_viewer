@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:rp10_index_server/ammo_price.dart';
 import 'package:rp10_index_server/caliber.dart';
 import 'package:rp10_index_server/index_quote.dart';
+import 'package:rp10_index_viewer/data/data_manager.dart';
 import 'package:rp10_index_viewer/ui/homescreen/date_controls.dart';
 import 'package:rp10_index_viewer/ui/homescreen/candlestick_chart.dart';
 import 'package:rp10_index_viewer/ui/homescreen/sparkline_grid.dart';
@@ -66,21 +67,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static const urlRoot = kDebugMode ? "http://localhost:8000" : "https://rp10.manywords.press";
-
-
   BuildContext _innerContext;
   List<IndexQuote> _quotes = [];
   List<Map<String, double>> _candlestickData;
-  Map<String, List<AmmoPrice>> _sparklinePrices = {};
+  Map<Caliber, List<AmmoPrice>> _sparklinePrices = {};
   bool _touchMode = false;
+  bool _sparklinesInitialized = false;
+  bool _chartInitialized = false;
 
   @override
   void initState() {
     super.initState();
 
     for(var caliber in Caliber.values) {
-      _sparklinePrices[caliber.url] = [];
+      _sparklinePrices[caliber] = [];
     }
 
     _checkPlatform();
@@ -99,45 +99,27 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _fetchIndexData(DateTime start, DateTime end) async {
     if(start == null) start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
-    try {
-      var url = "$urlRoot/quote?start=$start";
-      if(end != null) url = "$urlRoot/quote?start=$start&end=$end";
-      var response = await http.get(url);
+    if(end == null) end = DateTime.now();
 
-      if(response.statusCode == 200) {
-        var quotes = IndexQuote.listFromJson(jsonDecode(response.body));
-        _addChartData(quotes);
-      }
-      else {
-        Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Response code: ${response.statusCode}")));
-      }
-    } catch(e) {
-      Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Error: $e")));
+    var quotes = await DataManager().getQuotes(start, end);
+    if(quotes != null) {
+      _addChartData(quotes);
+    }
+    else {
+      Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Error getting quote data!")));
     }
   }
 
   Future<void> _fetchSparklineData(DateTime start, DateTime end) async {
     if(start == null) start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
-    try {
-      var url = "$urlRoot/price?start=$start";
-      if(end != null) url = "$urlRoot/price?start=$start&end=$end";
-      var response = await http.get(url);
+    if(end == null) end = DateTime.now();
 
-      if(response.statusCode == 200) {
-        Map<String, dynamic> quotes = jsonDecode(response.body);
-        Map<String, List<AmmoPrice>> prices = {};
-        for(String caliberUrl in quotes.keys) {
-          prices[caliberUrl] = AmmoPrice.listFromJson(quotes[caliberUrl]);
-        }
-
-        Timer(Duration(milliseconds: 2000), () => setState(() {
-          _sparklinePrices = prices;
-        }));
-      }
-    } catch(e) {
-      Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Error: $e")));
-    }
+    var prices = await DataManager().getPrices(start, end);
+    Timer(Duration(milliseconds: _sparklinesInitialized ? 1250 : 2000), () => setState(() {
+      _sparklinePrices = prices;
+      _sparklinesInitialized = true;
+    }));
   }
 
   void _addChartData(List<IndexQuote> quotes) {
@@ -173,7 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if(dailyData.isNotEmpty) {
-      data.add(_calculateCandlestickData(dailyData));
+      var candlestickData = _calculateCandlestickData(dailyData);
+      if(candlestickData != null) data.add(candlestickData);
     }
 
     setState(() {
@@ -181,14 +164,17 @@ class _MyHomePageState extends State<MyHomePage> {
       _quotes = quotes;
     });
 
-    Timer(Duration(milliseconds: 1250), () => {
+    Timer(Duration(milliseconds: _chartInitialized ? 1250 : 1250), () {
       setState((){
         _quotes = quotes;
-      })
+      });
+      _chartInitialized = true;
     });
   }
 
   Map<String, double> _calculateCandlestickData(List<IndexQuote> _dailyData) {
+    if(_dailyData.length == 0) return null;
+
     double high = 0, low = 1000, open = 0, close = 0;
     for(var quote in _dailyData) {
       var est = tz.getLocation("America/New_York");

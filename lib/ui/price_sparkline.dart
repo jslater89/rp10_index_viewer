@@ -31,6 +31,8 @@ class PriceSparkline extends StatelessWidget {
       if(!price.inStock) hasOutOfStock = true;
     }
 
+    //print("Low price for ${prices.first.caliber}: $lowPrice");
+
     if(prices.length > 2) {
       for (int i = 1; i < prices.length; i++) {
         var lastQuote = prices[i-1];

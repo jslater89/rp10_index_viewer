@@ -30,6 +30,7 @@ dependencies:
   flutter_candlesticks:
     path: ../flutter-candlesticks
   platform_detect:
+  sortedmap:
 
   flutter:
     sdk: flutter
