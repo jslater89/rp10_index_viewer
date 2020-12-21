@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 /// DataManager fetches data from the server, caches it, and provides it to the
 /// app.
 class DataManager {
+  //static const urlRoot = kDebugMode ? "https://cors-anywhere.herokuapp.com/https://rp10.manywords.press" : "https://rp10.manywords.press";
   static const urlRoot = kDebugMode ? "http://localhost:8000" : "https://rp10.manywords.press";
 
   DateTime firstRequested;
