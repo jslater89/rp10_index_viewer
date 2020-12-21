@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _fetchIndexData(DateTime start, DateTime end) async {
     if(start == null) start = DateTime.now().toUtc().subtract(Duration(days: 30));
     start = DateTime(start.year, start.month, start.day);
-    if(end == null) end = DateTime.now();
+    if(end == null) end = DateTime.now().toUtc();
 
     var quotes = await DataManager().getQuotes(start, end);
     if(quotes != null) {

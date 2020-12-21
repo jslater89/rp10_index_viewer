@@ -24,7 +24,7 @@ class _DateControlsState extends State<DateControls> {
   }
 
   DateTime _parseDate(DateTime date, {bool start: true}) {
-    if(start) return DateTime(date.year, date.month, date.day).toUtc();
+    if(start) return DateTime(date.year, date.month, date.day, 0).toUtc();
     else return DateTime(date.year, date.month, date.day, 23, 59, 59).toUtc();
   }
 
