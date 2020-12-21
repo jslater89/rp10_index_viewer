@@ -63,8 +63,8 @@ class _DateControlsState extends State<DateControls> {
             onPressed: () async {
               var date = await showDatePicker(
                 context: context,
-                initialDate: startDate,
-                firstDate: DateTime(2020, 10, 27, 0),
+                initialDate: startDate.isAfter(DateTime(2020, 11, 9)) ? startDate : DateTime(2020, 11, 9),
+                firstDate: DateTime(2020, 11, 9, 0),
                 lastDate: DateTime.now().subtract(Duration(days: 1)),
               );
 
