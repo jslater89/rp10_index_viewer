@@ -24,6 +24,12 @@ class DataManager {
 
       _fetchLock = null;
     }
+    else if (firstRequested != null && lastRequested != null && (start.isBefore(firstRequested) || end.isAfter(lastRequested))){
+      if(_fetchLock == null) _fetchLock = _fetchData(start, end);
+      await _fetchLock;
+
+      _fetchLock = null;
+    }
     int startIndex = _quoteData.indexWhere((element) => element.time.isAfter(start)) ?? 0;
     int endIndex = (_quoteData.lastIndexWhere((element) => element.time.isBefore(end)) + 1) ?? _quoteData.length;
     var quotes = _quoteData.sublist(
@@ -37,6 +43,12 @@ class DataManager {
 
   Future<Map<Caliber, List<AmmoPrice>>> getPrices(DateTime start, DateTime end) async {
     if(_priceData.length == 0 || firstRequested == null || lastRequested == null) {
+      if(_fetchLock == null) _fetchLock = _fetchData(start, end);
+      await _fetchLock;
+
+      _fetchLock = null;
+    }
+    else if (firstRequested != null && lastRequested != null && (start.isBefore(firstRequested) || end.isAfter(lastRequested))){
       if(_fetchLock == null) _fetchLock = _fetchData(start, end);
       await _fetchLock;
 
@@ -70,18 +82,47 @@ class DataManager {
       lastRequested = end;
     }
     else {
+      print("Checking if fetch needed from $start to $end");
       DateTime preRangeStart = start;
       DateTime preRangeEnd = firstRequested.subtract(Duration(minutes: 1));
       if(preRangeStart.isBefore(preRangeEnd)) {
-        // TODO: fetch before data, add new quotes
-        firstRequested = start;
+        print("Moving start back to $preRangeStart");
+        var quotes = await _fetchQuotes(preRangeStart, preRangeEnd);
+        var prices = await _fetchPrices(preRangeStart, preRangeEnd);
+
+        if(quotes != null && prices != null) {
+          print("Fetched ${quotes.length} new quotes, ${prices[Caliber.nineMM].length} new prices");
+          _quoteData = quotes..addAll(_quoteData);
+          for(Caliber c in Caliber.values) {
+            _priceData[c] = prices[c]..addAll(_priceData[c]);
+          }
+
+          firstRequested = preRangeStart;
+        }
+        else {
+          print("Got a null quotes or prices");
+        }
       }
 
       DateTime postRangeStart = lastRequested.add(Duration(minutes: 1));
       DateTime postRangeEnd = end;
       if(postRangeEnd.isAfter(postRangeStart)) {
-        // TODO: fetch, add, etc.
-        lastRequested = end;
+        print("Moving end forward to $postRangeEnd");
+        var quotes = await _fetchQuotes(postRangeEnd, postRangeEnd);
+        var prices = await _fetchPrices(postRangeStart, postRangeEnd);
+
+        if(quotes != null && prices != null) {
+          print("Fetched ${quotes.length} new quotes, ${prices[Caliber.nineMM].length} new prices");
+          _quoteData = _quoteData..addAll(quotes);
+          for(Caliber c in Caliber.values) {
+            _priceData[c] = _priceData[c]..addAll(prices[c]);
+          }
+
+          lastRequested = postRangeEnd;
+        }
+        else {
+          print("Got a null quotes or prices");
+        }
       }
     }
   }
