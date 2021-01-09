@@ -5,6 +5,10 @@ import 'package:rp10_index_server/ammo_price.dart';
 import 'package:rp10_index_server/caliber.dart';
 import 'package:rp10_index_server/index_quote.dart';
 import 'package:http/http.dart' as http;
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
+import 'candlestick_day.dart';
 
 /// DataManager fetches data from the server, caches it, and provides it to the
 /// app.
@@ -17,6 +21,72 @@ class DataManager {
   List<IndexQuote> _quoteData = [];
   Map<Caliber, List<AmmoPrice>> _priceData = {};
   Future<void> _fetchLock;
+
+  Future<List<CandlestickDay>> getCandlestickDays(DateTime start, DateTime end) async {
+    var quotes = await getQuotes(start, end);
+    List<CandlestickDay> data = [];
+    List<IndexQuote> dailyData = [];
+
+    for(var quote in quotes) {
+      if(dailyData.isEmpty) {
+        dailyData.add(quote);
+        continue;
+      }
+
+      // The 'exchange' is in EST
+      var est = tz.getLocation("America/New_York");
+      var lastExchangeTime = tz.TZDateTime.from(dailyData.last.time, est);
+      var thisExchangeTime = tz.TZDateTime.from(quote.time, est);
+      var endOfLastDay = tz.TZDateTime(est, lastExchangeTime.year, lastExchangeTime.month, lastExchangeTime.day, 23, 59, 59, 999);
+      //
+      // print("Daily data last: ${dailyData.last.time} ${dailyData.last.time.isUtc}");
+      // print("Exchange time: $lastExchangeTime");
+      // print("End of last day: $endOfLastDay");
+
+      if(thisExchangeTime.isAfter(endOfLastDay)) {
+        //print("Switching day: $thisExchangeTime is after $endOfLastDay");
+        if(dailyData.isNotEmpty) data.add(_calculateCandlestickData(dailyData));
+        dailyData = [quote];
+      }
+      else {
+        dailyData.add(quote);
+      }
+
+      //print("Done\n");
+    }
+
+    if(dailyData.isNotEmpty) {
+      var candlestickData = _calculateCandlestickData(dailyData);
+      if(candlestickData != null) data.add(candlestickData);
+    }
+
+    return data;
+  }
+
+  CandlestickDay _calculateCandlestickData(List<IndexQuote> _dailyData) {
+    if(_dailyData.length == 0) throw ArgumentError();
+
+    double high = 0, low = 1000, open = 0, close = 0;
+    for(var quote in _dailyData) {
+      var est = tz.getLocation("America/New_York");
+      var exchangeTime = tz.TZDateTime.from(quote.time, est);
+
+      if(quote.indexPrice > high) high = quote.indexPrice;
+      if(quote.indexPrice < low) low = quote.indexPrice;
+      if(open == 0 && exchangeTime.hour >= 8) {
+        open = quote.indexPrice;
+      }
+    }
+    if(open == 0) open = _dailyData.first.indexPrice;
+    close = _dailyData.last.indexPrice;
+
+    return CandlestickDay(
+      open: open,
+      close: close,
+      high: high,
+      low: low,
+    );
+  }
 
   Future<List<IndexQuote>> getQuotes(DateTime start, DateTime end) async {
     if(_quoteData.length == 0 || firstRequested == null || lastRequested == null) {

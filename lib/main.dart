@@ -16,6 +16,8 @@ import 'package:rp10_index_viewer/ui/homescreen/index_chart.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'data/candlestick_day.dart';
+
 void main() {
   tz.initializeTimeZones();
   runApp(MyApp());
@@ -102,8 +104,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if(end == null) end = DateTime.now().toUtc();
 
     var quotes = await DataManager().getQuotes(start, end);
+    var candlestickData = await DataManager().getCandlestickDays(start, end);
     if(quotes != null) {
-      _addChartData(quotes);
+      _addChartData(quotes, candlestickData);
     }
     else {
       Scaffold.of(_innerContext).showSnackBar(SnackBar(content: Text("Error getting quote data!")));
@@ -122,45 +125,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }));
   }
 
-  void _addChartData(List<IndexQuote> quotes) {
-    List<Map<String, double>> data = [];
-    List<IndexQuote> dailyData = [];
-
-    for(var quote in quotes) {
-      if(dailyData.isEmpty) {
-        dailyData.add(quote);
-        continue;
-      }
-
-      // The 'exchange' is in EST
-      var est = tz.getLocation("America/New_York");
-      var lastExchangeTime = tz.TZDateTime.from(dailyData.last.time, est);
-      var thisExchangeTime = tz.TZDateTime.from(quote.time, est);
-      var endOfLastDay = tz.TZDateTime(est, lastExchangeTime.year, lastExchangeTime.month, lastExchangeTime.day, 23, 59, 59, 999);
-      //
-      // print("Daily data last: ${dailyData.last.time} ${dailyData.last.time.isUtc}");
-      // print("Exchange time: $lastExchangeTime");
-      // print("End of last day: $endOfLastDay");
-
-      if(thisExchangeTime.isAfter(endOfLastDay)) {
-        //print("Switching day: $thisExchangeTime is after $endOfLastDay");
-        if(dailyData.isNotEmpty) data.add(_calculateCandlestickData(dailyData));
-        dailyData = [quote];
-      }
-      else {
-        dailyData.add(quote);
-      }
-
-      //print("Done\n");
-    }
-
-    if(dailyData.isNotEmpty) {
-      var candlestickData = _calculateCandlestickData(dailyData);
-      if(candlestickData != null) data.add(candlestickData);
-    }
-
+  void _addChartData(List<IndexQuote> quotes, List<CandlestickDay> candlestickData) {
     setState(() {
-      _candlestickData = data;
+      _candlestickData = candlestickData.toDataFormat();
       _quotes = quotes;
     });
 
@@ -170,32 +137,6 @@ class _MyHomePageState extends State<MyHomePage> {
       });
       _chartInitialized = true;
     });
-  }
-
-  Map<String, double> _calculateCandlestickData(List<IndexQuote> _dailyData) {
-    if(_dailyData.length == 0) return null;
-
-    double high = 0, low = 1000, open = 0, close = 0;
-    for(var quote in _dailyData) {
-      var est = tz.getLocation("America/New_York");
-      var exchangeTime = tz.TZDateTime.from(quote.time, est);
-
-      if(quote.indexPrice > high) high = quote.indexPrice;
-      if(quote.indexPrice < low) low = quote.indexPrice;
-      if(open == 0 && exchangeTime.hour >= 8) {
-        open = quote.indexPrice;
-      }
-    }
-    if(open == 0) open = _dailyData.first.indexPrice;
-    close = _dailyData.last.indexPrice;
-
-    return {
-      "open": open,
-      "close": close,
-      "high": high,
-      "low": low,
-      "volumeto": 1,
-    };
   }
 
   void _updateData(DateTime start, DateTime end) async {
