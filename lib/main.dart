@@ -77,6 +77,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _sparklinesInitialized = false;
   bool _chartInitialized = false;
 
+  DateTime _start = DateTime.now().toUtc().subtract(Duration(days: 30));
+  DateTime _end = DateTime.now().toUtc();
+
   @override
   void initState() {
     super.initState();
@@ -140,6 +143,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _updateData(DateTime start, DateTime end) async {
+    // These will be picked up on the next state change
+    _start = start;
+    _end = end ?? DateTime.now();
+
     _fetchIndexData(start, end);
     _fetchSparklineData(start, end);
   }
@@ -175,6 +182,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       height: firstRowHeight,
                       child: IndexChart(
                         _quotes,
+                        requestedStart: _start,
+                        requestedEnd: _end,
                         touchMode: _touchMode,
                       ),
                     ),
@@ -196,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 child: _candlestickData != null ? CandlestickChart(candlestickData: _candlestickData) : Container(),
                               ),
                               SizedBox(height: 10),
-                              SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices),
+                              SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices, requestedStart: _start, requestedEnd: _end,),
                             ]
                           );
                         }
@@ -215,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 SizedBox(width: 10),
                                 Expanded(
                                   flex: 2,
-                                  child: SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices),
+                                  child: SparklineGrid(secondRowHeight: secondRowHeight, sparklinePrices: _sparklinePrices, requestedStart: _start, requestedEnd: _end,),
                                 ),
                               ],
                             ),

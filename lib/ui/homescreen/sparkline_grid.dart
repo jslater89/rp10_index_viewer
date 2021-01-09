@@ -8,10 +8,14 @@ class SparklineGrid extends StatelessWidget {
     Key key,
     @required this.secondRowHeight,
     @required Map<Caliber, List<AmmoPrice>> sparklinePrices,
+    @required this.requestedStart,
+    @required this.requestedEnd,
   }) : _sparklinePrices = sparklinePrices, super(key: key);
 
   final double secondRowHeight;
   final Map<Caliber, List<AmmoPrice>> _sparklinePrices;
+  final DateTime requestedStart;
+  final DateTime requestedEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +49,15 @@ class SparklineGrid extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Expanded(child: LabeledAmmoSparkline(label: "9mm", prices: _sparklinePrices[Caliber.nineMM], extentLow: pistolLow, extentHigh: pistolHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: "9mm", prices: _sparklinePrices[Caliber.nineMM], extentLow: pistolLow, extentHigh: pistolHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: ".45", prices: _sparklinePrices[Caliber.fortyFive], extentLow: pistolLow, extentHigh: pistolHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: ".45", prices: _sparklinePrices[Caliber.fortyFive], extentLow: pistolLow, extentHigh: pistolHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: ".40", prices: _sparklinePrices[Caliber.forty], extentLow: pistolLow, extentHigh: pistolHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: ".40", prices: _sparklinePrices[Caliber.forty], extentLow: pistolLow, extentHigh: pistolHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: ".38Spl", prices: _sparklinePrices[Caliber.thirtyEight], extentLow: pistolLow, extentHigh: pistolHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: ".38Spl", prices: _sparklinePrices[Caliber.thirtyEight], extentLow: pistolLow, extentHigh: pistolHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: ".380", prices: _sparklinePrices[Caliber.threeEighty], extentLow: pistolLow, extentHigh: pistolHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: ".380", prices: _sparklinePrices[Caliber.threeEighty], extentLow: pistolLow, extentHigh: pistolHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                 ],
               ),
             )
@@ -64,15 +68,15 @@ class SparklineGrid extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Expanded(child: LabeledAmmoSparkline(label: "5.56", prices: _sparklinePrices[Caliber.fiveFiveSix], extentLow: rifleLow, extentHigh: rifleHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: "5.56", prices: _sparklinePrices[Caliber.fiveFiveSix], extentLow: rifleLow, extentHigh: rifleHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: ".308", prices: _sparklinePrices[Caliber.threeOhEight], extentLow: rifleLow, extentHigh: rifleHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: ".308", prices: _sparklinePrices[Caliber.threeOhEight], extentLow: rifleLow, extentHigh: rifleHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: ".30-06", prices: _sparklinePrices[Caliber.thirtyOught], extentLow: rifleLow, extentHigh: rifleHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: ".30-06", prices: _sparklinePrices[Caliber.thirtyOught], extentLow: rifleLow, extentHigh: rifleHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: "x39", prices: _sparklinePrices[Caliber.sevenSixTwoRussianShort], extentLow: rifleLow, extentHigh: rifleHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: "x39", prices: _sparklinePrices[Caliber.sevenSixTwoRussianShort], extentLow: rifleLow, extentHigh: rifleHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                   SizedBox(height: 5),
-                  Expanded(child: LabeledAmmoSparkline(label: "x54R", prices: _sparklinePrices[Caliber.sevenSixTwoRussianLong], extentLow: rifleLow, extentHigh: rifleHigh)),
+                  Expanded(child: LabeledAmmoSparkline(label: "x54R", prices: _sparklinePrices[Caliber.sevenSixTwoRussianLong], extentLow: rifleLow, extentHigh: rifleHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
                 ],
               ),
             )

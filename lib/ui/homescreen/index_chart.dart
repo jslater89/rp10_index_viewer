@@ -15,6 +15,7 @@ import 'package:rp10_index_server/index_quote.dart';
 import 'package:charts_flutter/src/text_element.dart' as text;
 import 'package:charts_flutter/src/text_style.dart' as style;
 import 'package:rp10_index_viewer/util/utils.dart';
+import 'package:rp10_index_viewer/data/data_manager.dart';
 
 class IndexChart extends StatelessWidget {
   final List<charts.Series<IndexQuote, DateTime>> _seriesList;
@@ -25,7 +26,7 @@ class IndexChart extends StatelessWidget {
   final double lowPrice;
   final bool touchMode;
 
-  factory IndexChart(List<IndexQuote> quotes, {bool touchMode = false}) {
+  factory IndexChart(List<IndexQuote> quotes, {@required DateTime requestedStart, @required DateTime requestedEnd, bool touchMode = false}) {
     double highPrice = 0, lowPrice = 1000;
     DateTime first = DateTime(3000), last = DateTime(0);
 
@@ -42,7 +43,9 @@ class IndexChart extends StatelessWidget {
         var currentQuote = quotes[i];
 
         // Add a null quote so we get a gap
-        if(lastQuote.time.isBefore(currentQuote.time.subtract(Duration(minutes: 70)))) {
+        var dataMode = DataInterval.forBounds(requestedStart, requestedEnd);
+        var durationBeforeGap = Duration(hours: dataMode.hoursBetweenData(), minutes: 10);
+        if(lastQuote.time.isBefore(currentQuote.time.subtract(durationBeforeGap))) {
           var dummyQuote = IndexQuote();
           dummyQuote.indexPrice = null;
           dummyQuote.time = lastQuote.time.add(Duration(minutes: 1));

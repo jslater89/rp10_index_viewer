@@ -7,9 +7,11 @@ class LabeledAmmoSparkline extends StatelessWidget {
   final List<AmmoPrice> prices;
   final double extentLow;
   final double extentHigh;
+  final DateTime requestedStart;
+  final DateTime requestedEnd;
 
   const LabeledAmmoSparkline({
-    Key key, this.label, this.prices, this.extentLow, this.extentHigh,
+    Key key, this.label, this.prices, this.extentLow, this.extentHigh, this.requestedStart, this.requestedEnd,
   }) : super(key: key);
 
   @override
@@ -18,7 +20,7 @@ class LabeledAmmoSparkline extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(width: 45, child: Align(alignment: Alignment.bottomRight, child: Text(label, softWrap: false, overflow: TextOverflow.fade,))),
-        Expanded(flex: 15, child: PriceSparkline(prices, extentLow: extentLow, extentHigh: extentHigh)),
+        Expanded(flex: 15, child: PriceSparkline(prices, extentLow: extentLow, extentHigh: extentHigh, requestedStart: requestedStart, requestedEnd: requestedEnd)),
       ],
     );
   }

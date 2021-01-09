@@ -23,41 +23,11 @@ class DataManager {
   Future<void> _fetchLock;
 
   Future<List<CandlestickDay>> getCandlestickDays(DateTime start, DateTime end) async {
-    var quotes = await getQuotes(start, end);
+    var quotes = await getQuotes(start, end, reduceTemporalResolution: false);
     List<CandlestickDay> data = [];
-    List<IndexQuote> dailyData = [];
 
-    for(var quote in quotes) {
-      if(dailyData.isEmpty) {
-        dailyData.add(quote);
-        continue;
-      }
-
-      // The 'exchange' is in EST
-      var est = tz.getLocation("America/New_York");
-      var lastExchangeTime = tz.TZDateTime.from(dailyData.last.time, est);
-      var thisExchangeTime = tz.TZDateTime.from(quote.time, est);
-      var endOfLastDay = tz.TZDateTime(est, lastExchangeTime.year, lastExchangeTime.month, lastExchangeTime.day, 23, 59, 59, 999);
-      //
-      // print("Daily data last: ${dailyData.last.time} ${dailyData.last.time.isUtc}");
-      // print("Exchange time: $lastExchangeTime");
-      // print("End of last day: $endOfLastDay");
-
-      if(thisExchangeTime.isAfter(endOfLastDay)) {
-        //print("Switching day: $thisExchangeTime is after $endOfLastDay");
-        if(dailyData.isNotEmpty) data.add(_calculateCandlestickData(dailyData));
-        dailyData = [quote];
-      }
-      else {
-        dailyData.add(quote);
-      }
-
-      //print("Done\n");
-    }
-
-    if(dailyData.isNotEmpty) {
-      var candlestickData = _calculateCandlestickData(dailyData);
-      if(candlestickData != null) data.add(candlestickData);
+    for(List<IndexQuote> dailyData in _splitByDays(quotes)) {
+      if(dailyData.length > 0) data.add(_calculateCandlestickData(dailyData));
     }
 
     return data;
@@ -88,7 +58,7 @@ class DataManager {
     );
   }
 
-  Future<List<IndexQuote>> getQuotes(DateTime start, DateTime end) async {
+  Future<List<IndexQuote>> getQuotes(DateTime start, DateTime end, {bool reduceTemporalResolution = true}) async {
     if(_quoteData.length == 0 || firstRequested == null || lastRequested == null) {
       if(_fetchLock == null) _fetchLock = _fetchData(start, end);
       await _fetchLock;
@@ -108,11 +78,130 @@ class DataManager {
       endIndex
     );
 
+    if(reduceTemporalResolution) {
+      var dataMode = DataInterval.forBounds(start, end);
+      if (dataMode == DataMode.dailyAverage) {
+        print("Quote mode: daily average");
+        var est = tz.getLocation("America/New_York");
+
+        var averageQuotes = <IndexQuote>[];
+        for (List<IndexQuote> daily in _splitByDays(quotes)) {
+          if (daily.length == 0) continue;
+
+          var noon = tz.TZDateTime(
+              est, daily.first.time.year, daily.first.time.month,
+              daily.first.time.day, 12);
+          double price =
+          daily.map((e) => e.indexPrice).reduce((value, element) =>
+          value + element);
+
+          IndexQuote quote = IndexQuote();
+          quote.indexPrice = price / daily.length;
+          quote.time = noon;
+          averageQuotes.add(quote);
+        }
+
+        quotes = averageQuotes;
+      }
+      else if (dataMode == DataMode.everyFourth) {
+        print("Quote mode: every 4th");
+        int quoteIndex = 0;
+        int totalQuotes = quotes.length;
+        quotes.retainWhere((element) =>
+        quoteIndex >= totalQuotes || quoteIndex++ % 4 == 0);
+      }
+      else if (dataMode == DataMode.everyOther) {
+        print("Quote mode: every other");
+        int quoteIndex = 0;
+        int totalQuotes = quotes.length;
+        quotes.retainWhere((element) =>
+        quoteIndex >= totalQuotes || quoteIndex++ % 2 == 0);
+      }
+    }
+
     print("Quote count: ${quotes.length} out of ${_quoteData.length}, $startIndex to $endIndex");
     return quotes;
   }
 
-  Future<Map<Caliber, List<AmmoPrice>>> getPrices(DateTime start, DateTime end) async {
+  List<List<IndexQuote>> _splitByDays(List<IndexQuote> quotes) {
+    List<List<IndexQuote>> dailyData = [];
+    List<IndexQuote> thisDay = [];
+
+    for(var quote in quotes) {
+      if(thisDay.isEmpty) {
+        thisDay.add(quote);
+        continue;
+      }
+
+      // The 'exchange' is in EST
+      var est = tz.getLocation("America/New_York");
+      var lastExchangeTime = tz.TZDateTime.from(thisDay.last.time, est);
+      var thisExchangeTime = tz.TZDateTime.from(quote.time, est);
+      var endOfLastDay = tz.TZDateTime(est, lastExchangeTime.year, lastExchangeTime.month, lastExchangeTime.day, 23, 59, 59, 999);
+      //
+      // print("Daily data last: ${dailyData.last.time} ${dailyData.last.time.isUtc}");
+      // print("Exchange time: $lastExchangeTime");
+      // print("End of last day: $endOfLastDay");
+
+      if(thisExchangeTime.isAfter(endOfLastDay)) {
+        //print("Switching day: $thisExchangeTime is after $endOfLastDay");
+        if(thisDay.isNotEmpty) dailyData.add([]..addAll(thisDay));
+        thisDay = [quote];
+      }
+      else {
+        thisDay.add(quote);
+      }
+
+      //print("Done\n");
+    }
+
+    if(thisDay.isNotEmpty) {
+      dailyData.add([]..addAll(thisDay));
+    }
+
+    return dailyData;
+  }
+
+  List<List<AmmoPrice>> _splitPricesByDays(List<AmmoPrice> prices) {
+    List<List<AmmoPrice>> dailyData = [];
+    List<AmmoPrice> thisDay = [];
+
+    for(var price in prices) {
+      if(thisDay.isEmpty) {
+        thisDay.add(price);
+        continue;
+      }
+
+      // The 'exchange' is in EST
+      var est = tz.getLocation("America/New_York");
+      var lastExchangeTime = tz.TZDateTime.from(thisDay.last.time, est);
+      var thisExchangeTime = tz.TZDateTime.from(price.time, est);
+      var endOfLastDay = tz.TZDateTime(est, lastExchangeTime.year, lastExchangeTime.month, lastExchangeTime.day, 23, 59, 59, 999);
+      //
+      // print("Daily data last: ${dailyData.last.time} ${dailyData.last.time.isUtc}");
+      // print("Exchange time: $lastExchangeTime");
+      // print("End of last day: $endOfLastDay");
+
+      if(thisExchangeTime.isAfter(endOfLastDay)) {
+        //print("Switching day: $thisExchangeTime is after $endOfLastDay");
+        if(thisDay.isNotEmpty) dailyData.add([]..addAll(thisDay));
+        thisDay = [price];
+      }
+      else {
+        thisDay.add(price);
+      }
+
+      //print("Done\n");
+    }
+
+    if(thisDay.isNotEmpty) {
+      dailyData.add([]..addAll(thisDay));
+    }
+
+    return dailyData;
+  }
+
+  Future<Map<Caliber, List<AmmoPrice>>> getPrices(DateTime start, DateTime end, {bool reduceTemporalResolution = true}) async {
     if(_priceData.length == 0 || firstRequested == null || lastRequested == null) {
       if(_fetchLock == null) _fetchLock = _fetchData(start, end);
       await _fetchLock;
@@ -135,7 +224,49 @@ class DataManager {
         startI = startIndex;
         endI = endIndex;
       }
+
       filteredData[c] = _priceData[c].sublist(startIndex, endIndex);
+
+      if(reduceTemporalResolution) {
+        var dataMode = DataInterval.forBounds(start, end);
+        if (dataMode == DataMode.dailyAverage) {
+          var est = tz.getLocation("America/New_York");
+
+          var averagePrices = <AmmoPrice>[];
+          for (List<AmmoPrice> daily in _splitPricesByDays(filteredData[c])) {
+            if (daily.length == 0) continue;
+
+            var noon = tz.TZDateTime(
+                est, daily.first.time.year, daily.first.time.month,
+                daily.first.time.day, 12);
+            double price =
+            daily.map((e) => e.price).reduce((value, element) =>
+            value + element);
+
+            AmmoPrice quote = AmmoPrice();
+            quote.price = price / daily.length;
+            quote.caliber = daily.first.caliber;
+            quote.inStock = daily.map((e) => e.inStock).reduce((value, element) => value && element);
+            quote.time = noon;
+            
+            averagePrices.add(quote);
+          }
+
+          filteredData[c] = averagePrices;
+        }
+        else if (dataMode == DataMode.everyFourth) {
+          int quoteIndex = 0;
+          int totalQuotes = filteredData[c].length;
+          filteredData[c].retainWhere((element) =>
+            quoteIndex >= totalQuotes || quoteIndex++ % 4 == 0);
+        }
+        else if (dataMode == DataMode.everyOther) {
+          int quoteIndex = 0;
+          int totalQuotes = filteredData[c].length;
+          filteredData[c].retainWhere((element) =>
+            quoteIndex >= totalQuotes || quoteIndex++ % 2 == 0);
+        }
+      }
     }
     print("Price count: ${filteredData[Caliber.nineMM].length} out of ${_priceData[Caliber.nineMM].length}, $startI to $endI");
     return filteredData;
@@ -249,4 +380,46 @@ class DataManager {
   }
 
   DataManager._internal();
+}
+
+enum DataMode {
+  all,
+  everyOther,
+  everyFourth,
+  dailyAverage,
+}
+
+extension DataInterval on DataMode {
+  static DataMode forBounds(DateTime start, DateTime end) {
+    var duration = end.difference(start);
+    if(duration.inDays >= 120) {
+      return DataMode.dailyAverage;
+    }
+    else if(duration.inDays >= 90) {
+      return DataMode.everyFourth;
+    }
+    else if(duration.inDays >= 60) {
+      return DataMode.everyOther;
+    }
+    else  {
+      return DataMode.all;
+    }
+  }
+
+  int hoursBetweenData() {
+    switch(this) {
+      case DataMode.all:
+        return 1;
+        break;
+      case DataMode.everyOther:
+        return 2;
+        break;
+      case DataMode.everyFourth:
+        return 4;
+        break;
+      case DataMode.dailyAverage:
+        return 24;
+        break;
+    }
+  }
 }

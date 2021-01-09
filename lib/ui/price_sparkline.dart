@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rp10_index_server/ammo_price.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:rp10_index_viewer/data/data_manager.dart';
 import 'package:rp10_index_viewer/ui/colors.dart';
 import 'package:rp10_index_viewer/util/utils.dart';
 
@@ -14,7 +15,7 @@ class PriceSparkline extends StatelessWidget {
   final double extentLow;
   final double extentHigh;
 
-  factory PriceSparkline(List<AmmoPrice> prices, {bool touchMode = false, double extentLow, double extentHigh}) {
+  factory PriceSparkline(List<AmmoPrice> prices, {bool touchMode = false, double extentLow, double extentHigh, DateTime requestedStart, DateTime requestedEnd}) {
     double highPrice = 0,
         lowPrice = 1000;
     DateTime first = DateTime(3000),
@@ -39,7 +40,9 @@ class PriceSparkline extends StatelessWidget {
         var currentQuote = prices[i];
 
         // Add a null quote so we get a gap
-        if(lastQuote.time.isBefore(currentQuote.time.subtract(Duration(minutes: 70)))) {
+        var dataMode = DataInterval.forBounds(requestedStart, requestedEnd);
+        var durationBeforeGap = Duration(hours: dataMode.hoursBetweenData(), minutes: 10);
+        if(lastQuote.time.isBefore(currentQuote.time.subtract(durationBeforeGap))) {
           var dummyQuote = AmmoPrice();
           dummyQuote.price = null;
           dummyQuote.time = lastQuote.time.add(Duration(minutes: 1));
