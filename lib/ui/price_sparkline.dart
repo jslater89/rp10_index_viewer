@@ -95,13 +95,13 @@ class PriceSparkline extends StatelessWidget {
         _seriesList,
         animate: animate,
         secondaryMeasureAxis: charts.NumericAxisSpec(
-            renderSpec: charts.SmallTickRendererSpec(
-              tickLengthPx: 3,
+            renderSpec: charts.GridlineRendererSpec(
+              tickLengthPx: 0,
               lineStyle: charts.LineStyleSpec(
                 thickness: 1,
               ),
               axisLineStyle: charts.LineStyleSpec(
-                thickness: 0,
+                thickness: 1,
                 dashPattern: [0, 1]
               ),
               labelStyle: charts.TextStyleSpec(
@@ -116,12 +116,6 @@ class PriceSparkline extends StatelessWidget {
               charts.TickSpec<double>((extentLow + extentHigh) / 2, label: ""),
               charts.TickSpec<double>(extentHigh, label: ""),
             ])
-        ),
-        primaryMeasureAxis: charts.NumericAxisSpec(
-            renderSpec: charts.NoneRenderSpec(),
-            viewport: charts.NumericExtents(
-                extentLow, extentHigh
-            ),
         ),
         defaultInteractions: false,
         domainAxis: charts.DateTimeAxisSpec(
