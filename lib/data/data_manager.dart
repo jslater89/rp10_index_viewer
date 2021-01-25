@@ -392,13 +392,13 @@ enum DataMode {
 extension DataInterval on DataMode {
   static DataMode forBounds(DateTime start, DateTime end) {
     var duration = end.difference(start);
-    if(duration.inDays >= 120) {
+    if(duration.inDays > 90) {
       return DataMode.dailyAverage;
     }
-    else if(duration.inDays >= 90) {
+    else if(duration.inDays > 60) {
       return DataMode.everyFourth;
     }
-    else if(duration.inDays >= 60) {
+    else if(duration.inDays > 30) {
       return DataMode.everyOther;
     }
     else  {

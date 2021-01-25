@@ -16617,9 +16617,9 @@ a8p:function a8p(a){this.a=a},
 a8o:function a8o(a,b){this.a=a
 this.b=b},
 Rl:function(a,b){var s=C.e.bN(P.bm(0,0,0,b.a-a.a,0).a,864e8)
-if(s>=120)return C.jU
-else if(s>=90)return C.jT
-else if(s>=60)return C.jS
+if(s>90)return C.jU
+else if(s>60)return C.jT
+else if(s>30)return C.jS
 else return C.rb},
 ag_:function(a){switch(a){case C.rb:return 1
 case C.jS:return 2
